@@ -36,7 +36,14 @@ export class AuthControler {
         { expiresIn: '1d' },
       );
 
-      return res.status(200).send(token);
+      return res.status(200).json({
+        error: false,
+        token,
+        user: {
+          name: user.name,
+          email: user.email,
+        },
+      });
     } catch (e) {
       return res.status(400).json({ error: true, message: 'Invalid error' });
     }
