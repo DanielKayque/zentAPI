@@ -45,7 +45,10 @@ export class AuthControler {
         },
       });
     } catch (e) {
-      return res.status(400).json({ error: true, message: 'Invalid error' });
+      if (e instanceof Error)
+        return res
+          .status(400)
+          .json({ error: true, message: e.message, cause: e.cause });
     }
   }
 }
