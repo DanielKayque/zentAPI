@@ -45,7 +45,7 @@ export const createEvent = async (
       },
     });
 
-    return res.status(201).json({ message: 'User created.', data });
+    return res.status(201).json({ message: 'Event created.', data });
   } catch (error: unknown) {
     if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2003') {
