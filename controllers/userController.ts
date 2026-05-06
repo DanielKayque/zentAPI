@@ -15,16 +15,14 @@ export const createUser = async (req: Request<{}, {}, User>, res: Response) => {
     if (result.error) {
       const errorTree = z.treeifyError(result.error);
 
-      return res
-        .status(400)
-        .json({
-          error: true,
-          message: 'Data validation failed.',
-          errors: errorTree,
-        });
+      return res.status(400).json({
+        error: true,
+        message: 'Data validation failed.',
+        errors: errorTree,
+      });
     }
 
-    const { name, email, password } = req.body;
+    const { name, email, password } = result.data;
 
     //Transformar senha em hash
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -54,7 +52,14 @@ export const createUser = async (req: Request<{}, {}, User>, res: Response) => {
           message: 'This email already exists',
         });
       }
-      return res.status(400).json({ error: true, message: 'Unknown error!' });
+
+      // return res.status(400).json({ error: true, message: 'Unknown error!' });
+      console.error('ERRO PRISMA:', err.message);
+      return res.status(400).json({
+        error: true,
+        message: `Prisma Code: ${err.code}`,
+        details: err.message,
+      });
     }
   }
   return res.status(500).json({ error: true, message: 'Unknown error again' });
