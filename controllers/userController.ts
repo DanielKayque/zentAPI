@@ -6,16 +6,8 @@ import bcrypt from 'bcrypt';
 import { registerUserSchema } from '../schema/registerUserSchema.js';
 import z from 'zod';
 
-type UserParams = {
-  id: string;
-};
-
 //Criar usuários//
 export const createUser = async (req: Request<{}, {}, User>, res: Response) => {
-  // if (!name || !email || !password) {
-  //   return res.status(400).json({ error: true, message: 'Insuficient data.' });
-  // }
-
   try {
     //Validação ZOD
     const result = registerUserSchema.safeParse(req.body);
@@ -23,7 +15,13 @@ export const createUser = async (req: Request<{}, {}, User>, res: Response) => {
     if (result.error) {
       const errorTree = z.treeifyError(result.error);
 
-      return res.status(400).json({ error: true, ...errorTree });
+      return res
+        .status(400)
+        .json({
+          error: true,
+          message: 'Data validation failed.',
+          errors: errorTree,
+        });
     }
 
     const { name, email, password } = req.body;
@@ -42,7 +40,6 @@ export const createUser = async (req: Request<{}, {}, User>, res: Response) => {
         email: true,
       },
     });
-    console.log(name, email);
 
     return res.status(201).json({
       error: false,
@@ -57,7 +54,7 @@ export const createUser = async (req: Request<{}, {}, User>, res: Response) => {
           message: 'This email already exists',
         });
       }
-      return res.status(400).send('Unknown error!');
+      return res.status(400).json({ error: true, message: 'Unknown error!' });
     }
   }
   return res.status(500).json({ error: true, message: 'Unknown error again' });
