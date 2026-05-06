@@ -1,5 +1,3 @@
-# 🎉 Eventos API
-
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6.0+-blue?style=flat-square)
 ![Node](https://img.shields.io/badge/Node.js-20+-green?style=flat-square)
