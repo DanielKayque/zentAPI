@@ -27,7 +27,6 @@ export class MiddlewareAuth {
       ) as MyTokenPayload;
 
       //Se chegou aqui o token é válido!
-
       const { id } = decoded;
 
       //Tipei o req como any para o typescript nn reclamar que nn existe userId em req

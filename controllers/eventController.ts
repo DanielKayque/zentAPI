@@ -4,6 +4,7 @@ import type { Event } from '../generated/prisma/client.js';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 
 type CreateEvent = {
+  id: number;
   address: string;
   name: string;
   date: string;
@@ -80,6 +81,7 @@ export const deleteEvent = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
+    //Pega o token de autenticação
     const loggedId = req.userId;
 
     const deletedEvent = await prisma.event.deleteMany({
@@ -95,8 +97,57 @@ export const deleteEvent = async (req: Request, res: Response) => {
         .json({ error: 'Operation not permitted or event not found.' });
     }
 
-    return res.status(204).json({ message: 'Sucess, event deletted.' });
+    return res.status(200).json({ message: 'Sucess, event deletted.' });
   } catch (e) {
     return res.status(500).json({ error: 'Error deleting event.' });
+  }
+};
+
+// export const getEvent = async (req: Request, res: Response) => {
+//   const eventId = Number(req.params.id); // ID do evento (da URL)
+//   const loggedUserId = req.userId; // ID do usuário (do Token)
+
+//   try {
+//     // Tenta deletar cruzando as duas informações
+//     const event = await prisma.event.findUnique({
+//       where: {
+//         id: eventId,
+//         creatorId: Number(loggedUserId), // 🔒 A trava de segurança!
+//       },
+//     });
+
+//     return res.status(200).json(event);
+//   } catch (error) {
+//     return res.status(403).json({
+//       error: true,
+//       message: 'Você não tem permissão para ler este evento.',
+//     });
+//   }
+// };
+export const getEvent = async (req: Request, res: Response) => {
+  const eventId = Number(req.params.id);
+  const loggedUserId = req.userId;
+
+  try {
+    const event = await prisma.event.findUnique({
+      where: {
+        id: eventId,
+        creatorId: Number(loggedUserId),
+      },
+    });
+
+    if (!event) {  // ← Adiciona essa verificação
+      return res.status(403).json({
+        error: true,
+        message: 'Event not found.',
+      });
+    }
+
+    return res.status(200).json(event);  //
+  } catch (error) {
+    return res.status(500).json({
+      error: true,
+      message: 'Erro ao buscar evento.',
+    });
   }
 };
