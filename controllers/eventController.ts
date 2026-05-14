@@ -136,18 +136,63 @@ export const getEvent = async (req: Request, res: Response) => {
       },
     });
 
-    if (!event) {  // ← Adiciona essa verificação
+    if (!event) {
       return res.status(403).json({
         error: true,
         message: 'Event not found.',
       });
     }
 
-    return res.status(200).json(event);  //
+    return res.status(200).json(event); //
   } catch (error) {
     return res.status(500).json({
       error: true,
       message: 'Erro ao buscar evento.',
     });
+  }
+};
+
+export const updateEvent = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { name, address, date, limitParticipants } = req.body; // Pegue o que precisa atualizar
+
+  try {
+    const eventoAtualizado = await prisma.event.update({
+      where: {
+        id: Number(id), // O Prisma exige que o ID bata com o tipo do seu model (String ou Int)
+      },
+      data: {
+        name,
+        address,
+        date: new Date(date), //
+        limitParticipants: Number(limitParticipants),
+      },
+    });
+    res.status(200).json(eventoAtualizado);
+  } catch (error: unknown) {
+    console.error('Erro ao atualizar:', error);
+    res.status(500).json({ error: 'Erro ao atualizar o evento' });
+  }
+};
+
+export const getPublicEvent = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const evento = await prisma.event.findUnique({
+      where: { id: Number(id) },
+      include: {
+        _count: { select: { participantes: true } },
+      },
+    });
+
+    if (!evento) {
+      return res.status(404).json({ error: 'Event not found.' });
+    }
+
+    return res.status(201).json(evento);
+  } catch (e) {
+    console.error('Erro em getPublicEvent: ' + e);
+    res.status(500).json({ error: 'Error during the event search' });
   }
 };
