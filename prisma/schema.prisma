@@ -24,7 +24,7 @@ model User {
 }
 
 model Event {
-  id                Int      @id @default(autoincrement())
+  id                String      @id @default(uuid())
   name              String
   address           String
   date              DateTime
@@ -42,7 +42,7 @@ model Participant {
   nome    String
   email   String
   evento  Event  @relation(fields: [eventId], references: [id])
-  eventId Int
+  eventId String
 
   @@unique([email, eventId])
   @@map("participant")

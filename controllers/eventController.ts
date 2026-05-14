@@ -86,7 +86,7 @@ export const deleteEvent = async (req: Request, res: Response) => {
 
     const deletedEvent = await prisma.event.deleteMany({
       where: {
-        id: Number(id),
+        id: String(id),
         creatorId: Number(loggedId),
       },
     });
@@ -131,7 +131,7 @@ export const getEvent = async (req: Request, res: Response) => {
   try {
     const event = await prisma.event.findUnique({
       where: {
-        id: eventId,
+        id: String(eventId),
         creatorId: Number(loggedUserId),
       },
     });
@@ -159,7 +159,7 @@ export const updateEvent = async (req: Request, res: Response) => {
   try {
     const eventoAtualizado = await prisma.event.update({
       where: {
-        id: Number(id), // O Prisma exige que o ID bata com o tipo do seu model (String ou Int)
+        id: String(id), // O Prisma exige que o ID bata com o tipo do seu model (String ou Int)
       },
       data: {
         name,
@@ -180,7 +180,7 @@ export const getPublicEvent = async (req: Request, res: Response) => {
 
   try {
     const evento = await prisma.event.findUnique({
-      where: { id: Number(id) },
+      where: { id: String(id) },
       include: {
         _count: { select: { participantes: true } },
       },
