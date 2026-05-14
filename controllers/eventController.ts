@@ -125,7 +125,7 @@ export const deleteEvent = async (req: Request, res: Response) => {
 //   }
 // };
 export const getEvent = async (req: Request, res: Response) => {
-  const eventId = Number(req.params.id);
+  const eventId = String(req.params.id);
   const loggedUserId = req.userId;
 
   try {
