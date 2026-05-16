@@ -5,6 +5,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import bcrypt from 'bcrypt';
 import { registerUserSchema } from '../schema/registerUserSchema.js';
 import z from 'zod';
+import crypto from 'crypto';
 
 //Criar usuários//
 export const createUser = async (req: Request<{}, {}, User>, res: Response) => {
@@ -64,21 +65,6 @@ export const createUser = async (req: Request<{}, {}, User>, res: Response) => {
   }
   return res.status(500).json({ error: true, message: 'Unknown error again' });
 };
-
-//Listar usuários//
-// export const listUsers = async (req: Request, res: Response) => {
-//   try {
-//     const data = await prisma.user.findMany();
-//     if (!data) {
-//       return res
-//         .status(400)
-//         .json({ error: true, message: 'No registered users' });
-//     }
-//     return res.status(200).json(data);
-//   } catch (e) {
-//     return res.status(400).json({ err: true, message: 'Unknown error' });
-//   }
-// };
 
 //Deletar usuarios
 export const deleteMe = async (req: Request, res: Response) => {
@@ -143,3 +129,34 @@ export const deleteMe = async (req: Request, res: Response) => {
 //   }
 //   return res.status(500).json({ error: true, message: 'Unknown error again' });
 // };
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  //Pegar o usuário atráves do email
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  //Verificar existência do usuário
+  if (!user) {
+    return res.status(200).json({ message: 'User not found.' });
+  }
+
+  //Gera o token de 32 bits e converte para string hexadecimal
+  const token = crypto.randomBytes(32).toString('hex');
+
+  const QUINZE_MINUTES_EM_MS = 15 * 60 * 1000;
+
+  const expirationDate = new Date(Date.now() + QUINZE_MINUTES_EM_MS);
+
+  await prisma.user.update({
+    where: { email },
+    data: {
+      reset_password_token: token,
+      reset_password_expires: expirationDate,
+    },
+  });
+
+  return res
+    .status(200)
+    .json({ message: "We've sent a link to the email address you provided." });
+};

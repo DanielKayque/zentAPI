@@ -18,13 +18,17 @@ model User {
   password   String
   name       String
   created_at DateTime @default(now())
-  events     Event[]
+
+  //Chaves para reset de senhas
+  reset_password_token   String?
+  reset_password_expires DateTime?
+  events                 Event[]
 
   @@map("user")
 }
 
 model Event {
-  id                String      @id @default(uuid())
+  id                String   @id @default(uuid())
   name              String
   address           String
   date              DateTime
