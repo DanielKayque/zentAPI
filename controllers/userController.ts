@@ -6,6 +6,9 @@ import bcrypt from 'bcrypt';
 import { registerUserSchema } from '../schema/registerUserSchema.js';
 import z from 'zod';
 import crypto from 'crypto';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.API_KEY);
 
 //Criar usuários//
 export const createUser = async (req: Request<{}, {}, User>, res: Response) => {
@@ -133,6 +136,9 @@ export const deleteMe = async (req: Request, res: Response) => {
 export const forgotPassword = async (req: Request, res: Response) => {
   const { email } = req.body;
 
+  if (!email) {
+    return res.status(400).json({ message: 'Please send a valid email.' });
+  }
   //Pegar o usuário atráves do email
   const user = await prisma.user.findUnique({ where: { email } });
 
@@ -156,7 +162,21 @@ export const forgotPassword = async (req: Request, res: Response) => {
     },
   });
 
+  //Enviar mensagem
+  await resend.emails.send({
+    from: 'Zent <onboarding@resend.dev>',
+    to: email,
+    subject: 'Recuperação de senha - Zent',
+    html: `<p>Olá! Clique <a href="${process.env.BASE_URL}/reset-password?token=${token}">aqui</a> para criar uma nova senha.</p>`,
+  });
+
   return res
     .status(200)
     .json({ message: "We've sent a link to the email address you provided." });
+};
+
+export const recuperatePassword = async (req: Request, res: Response) => {
+  const { token } = req.params;
+
+  
 };
