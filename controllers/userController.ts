@@ -139,44 +139,99 @@ export const forgotPassword = async (req: Request, res: Response) => {
   if (!email) {
     return res.status(400).json({ message: 'Please send a valid email.' });
   }
-  //Pegar o usuário atráves do email
-  const user = await prisma.user.findUnique({ where: { email } });
 
-  //Verificar existência do usuário
-  if (!user) {
-    return res.status(200).json({ message: 'User not found.' });
+  try {
+    //Pegar o usuário atráves do email
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    //Verificar existência do usuário
+    if (!user) {
+      return res.status(200).json({ message: 'User not found.' });
+    }
+
+    //Gera o token de 32 bits e converte para string hexadecimal
+    const token = crypto.randomBytes(32).toString('hex');
+
+    const QUINZE_MINUTES_EM_MS = 15 * 60 * 1000;
+
+    const expirationDate = new Date(Date.now() + QUINZE_MINUTES_EM_MS);
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        reset_password_token: token,
+        reset_password_expires: expirationDate,
+      },
+    });
+
+    //Enviar mensagem
+    await resend.emails.send({
+      from: 'Zent <onboarding@resend.dev>',
+      to: email,
+      subject: 'Recuperação de senha - Zent',
+      html: `<p>Olá! Clique <a href="${process.env.BASE_URL}/reset-password?token=${token}">aqui</a> para criar uma nova senha.</p>`,
+    });
+
+    return res.status(200).json({
+      message: "We've sent a link to the email address you provided.",
+    });
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error('Error in forgotPassword' + err);
+      return res
+        .status(500)
+        .json({ message: 'Internal server error. Please try again later' });
+    }
   }
-
-  //Gera o token de 32 bits e converte para string hexadecimal
-  const token = crypto.randomBytes(32).toString('hex');
-
-  const QUINZE_MINUTES_EM_MS = 15 * 60 * 1000;
-
-  const expirationDate = new Date(Date.now() + QUINZE_MINUTES_EM_MS);
-
-  await prisma.user.update({
-    where: { email },
-    data: {
-      reset_password_token: token,
-      reset_password_expires: expirationDate,
-    },
-  });
-
-  //Enviar mensagem
-  await resend.emails.send({
-    from: 'Zent <onboarding@resend.dev>',
-    to: email,
-    subject: 'Recuperação de senha - Zent',
-    html: `<p>Olá! Clique <a href="${process.env.BASE_URL}/reset-password?token=${token}">aqui</a> para criar uma nova senha.</p>`,
-  });
-
-  return res
-    .status(200)
-    .json({ message: "We've sent a link to the email address you provided." });
 };
 
-export const recuperatePassword = async (req: Request, res: Response) => {
-  const { token } = req.params;
+export const resetPassword = async (req: Request, res: Response) => {
+  const { token, newPassword } = req.body;
 
-  
+  try {
+    const dateNow = new Date(Date.now());
+
+    const userFound = await prisma.user.findFirst({
+      where: { reset_password_token: token },
+      select: {
+        name: true,
+        id: true,
+        reset_password_expires: true,
+      },
+    });
+
+    if (!userFound) {
+      return res.status(404).json({ message: 'Token not valid' });
+    }
+
+    if (
+      userFound.reset_password_expires &&
+      dateNow > userFound.reset_password_expires
+    ) {
+      return res
+        .status(404)
+        .json({ message: 'Token not valid, please try again' });
+    }
+
+    //Chegou até aqui acabou as validações
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: userFound.id },
+      data: {
+        password: hashedPassword,
+        reset_password_expires: null,
+        reset_password_token: null,
+      },
+    });
+
+    return res.status(201).json({ message: 'Password updated suscefully' });
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error('Error in resetPassword', err);
+      return res
+        .status(500)
+        .json({ message: 'Unknown error, please try again later' });
+    }
+  }
 };

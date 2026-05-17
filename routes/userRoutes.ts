@@ -12,7 +12,8 @@ const router = Router();
 const authControler = new AuthControler();
 
 router.post('/register', createUser);
-router.post('/forgotpassword', forgotPassword);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', forgotPassword);
 // router.put('/user/:id', putUser);
 router.delete('/user/exclude', deleteMe);
 router.post('/login', authControler.login);
