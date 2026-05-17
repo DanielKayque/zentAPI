@@ -188,6 +188,16 @@ export const forgotPassword = async (req: Request, res: Response) => {
 export const resetPassword = async (req: Request, res: Response) => {
   const { token, newPassword } = req.body;
 
+  //Valida a senha com o schema já criado
+  const resultPassword =
+    registerUserSchema.shape.password.safeParse(newPassword);
+
+  if (!resultPassword.success) {
+    return res.status(400).json({
+      message: 'Data invalid',
+      errors: z.flattenError(resultPassword.error).formErrors,
+    });
+  }
   try {
     const dateNow = new Date(Date.now());
 

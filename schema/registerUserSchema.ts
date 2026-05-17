@@ -14,4 +14,8 @@ export const registerUserSchema = z.object({
     ),
 });
 
+export const resetPasswordSchema = z.object({
+  password: registerUserSchema.shape.password,
+});
+
 export type RegisterUser = z.infer<typeof registerUserSchema>;

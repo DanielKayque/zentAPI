@@ -3,6 +3,7 @@ import {
   createUser,
   deleteMe,
   forgotPassword,
+  resetPassword,
 } from '../controllers/userController.js';
 import { AuthControler } from '../controllers/AuthController.js';
 
@@ -13,7 +14,7 @@ const authControler = new AuthControler();
 
 router.post('/register', createUser);
 router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 // router.put('/user/:id', putUser);
 router.delete('/user/exclude', deleteMe);
 router.post('/login', authControler.login);
